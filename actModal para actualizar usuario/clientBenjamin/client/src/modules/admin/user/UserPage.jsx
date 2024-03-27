@@ -5,6 +5,7 @@ import AxiosClient from '../../../config/http-client/axios-client';
 import RegisterUserForm from './components/RegisterUserForm';
 import UpdateUserForm from './components/UpdateUserForm';
 import { MdCheckCircle, MdCancel } from 'react-icons/md';
+import Swal from 'sweetalert2'
 
 const UserPage = () => {
 
@@ -58,19 +59,43 @@ const UserPage = () => {
                         userId={selectedUserId} // Pasar el ID del usuario seleccionado al formulario de actualización
                         getAllUsers={getUsers}
                     />
-                    <Button onClick={async () => {
-                        try {
-                            const response = await AxiosClient({
-                                method: "PATCH",
-                                url: `/person/deactivate/${row.id}`, // Asegúrate de reemplazar `${id}` con el ID de la persona que deseas desactivar
-                            });
-                            const response2 = await AxiosClient({ url: "/user/", method: 'GET' });
-                            setUsers(response2.data);
-                            console.log(response.data);
-                        } catch (error) {
-                            console.error('Error:', error);
-                        }
-                    }}>Cambiar estado</Button>
+                    <Button onClick={() => {
+                        Swal.fire({
+                            title: '¿Estás seguro?',
+                            text: "¡No podrás revertir esto!",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: '¡Sí, Cambiar estado!',
+                            cancelButtonText: 'No, cancelar!'
+                        }).then(async (result) => {
+                            if (result.isConfirmed) {
+                                try {
+                                    const response = await AxiosClient({
+                                        method: "PATCH",
+                                        url: `/person/deactivate/${row.id}`,
+                                    });
+                                    const response2 = await AxiosClient({ url: "/user/", method: 'GET' });
+                                    setUsers(response2.data);
+                                    console.log(response.data);
+
+                                    Swal.fire({
+                                        title: '¡Cambiado!',
+                                        text: 'El estado del usuario a sido cambiado.',
+                                        icon: 'success'
+                                    });
+                                } catch (error) {
+                                    console.error('Error:', error);
+                                    Swal.fire({
+                                        title: 'Error!',
+                                        text: 'Hubo un error al desactivar el usuario.',
+                                        icon: 'error'
+                                    });
+                                }
+                            }
+                        })
+                    }}>Desactivar</Button>
                 </>
             ),
         },
